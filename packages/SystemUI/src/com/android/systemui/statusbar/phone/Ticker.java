@@ -55,16 +55,6 @@ public abstract class Ticker {
     private ImageSwitcher mIconSwitcher;
     private TextSwitcher mTextSwitcher;
     private float mIconScale;
-    private TickerCallback mEvent;
-
-    public interface TickerCallback  
-    {  
-        public void updateTicker(StatusBarNotification notification, String text);
-    }  
-
-    public void setUpdateEvent(TickerCallback event) {
-        mEvent = event;
-    }
 
     public static boolean isGraphicOrEmoji(char c) {
         int gc = Character.getType(c);
@@ -76,21 +66,21 @@ public abstract class Ticker {
                 && gc != Character.SPACE_SEPARATOR;
     }
 
-    public final class Segment {
-        public StatusBarNotification notification;
-        public Drawable icon;
-        public CharSequence text;
-        public int current;
-        public int next;
-        public boolean first;
+    private final class Segment {
+        StatusBarNotification notification;
+        Drawable icon;
+        CharSequence text;
+        int current;
+        int next;
+        boolean first;
 
-        public StaticLayout getLayout(CharSequence substr) {
+        StaticLayout getLayout(CharSequence substr) {
             int w = mTextSwitcher.getWidth() - mTextSwitcher.getPaddingLeft()
                     - mTextSwitcher.getPaddingRight();
             return new StaticLayout(substr, mPaint, w, Alignment.ALIGN_NORMAL, 1, 0, true);
         }
 
-        public CharSequence rtrim(CharSequence substr, int start, int end) {
+        CharSequence rtrim(CharSequence substr, int start, int end) {
             while (end > start && !isGraphicOrEmoji(substr.charAt(end-1))) {
                 end--;
             }
@@ -101,7 +91,7 @@ public abstract class Ticker {
         }
 
         /** returns null if there is no more text */
-        public CharSequence getText() {
+        CharSequence getText() {
             if (this.current > this.text.length()) {
                 return null;
             }
@@ -120,7 +110,7 @@ public abstract class Ticker {
         }
 
         /** returns null if there is no more text */
-        public CharSequence advance() {
+        CharSequence advance() {
             this.first = false;
             int index = this.next;
             final int len = this.text.length();
@@ -153,7 +143,7 @@ public abstract class Ticker {
             return null;
         }
 
-        public Segment(StatusBarNotification n, Drawable icon, CharSequence text) {
+        Segment(StatusBarNotification n, Drawable icon, CharSequence text) {
             this.notification = n;
             this.icon = icon;
             this.text = text;
@@ -194,16 +184,13 @@ public abstract class Ticker {
                     AnimationUtils.loadAnimation(context, com.android.internal.R.anim.push_up_out));
 
         // Copy the paint style of one of the TextSwitchers children to use later for measuring
-        TextView text = (TextView) mTextSwitcher.getChildAt(0);
+        TextView text = (TextView)mTextSwitcher.getChildAt(0);
         mPaint = text.getPaint();
         int stockFontSize = StatusBarHelpers.pixelsToSp(mContext,text.getTextSize());
         int fontSize = Settings.System.getInt(mContext.getContentResolver(),
                 Settings.System.STATUSBAR_FONT_SIZE, stockFontSize);
-        // If custom fonSize is set, then need to reduce by 2 to keep stock look/feel
-        // if no custom size is set, then stay with what was set by layout/style.
-        fontSize = (fontSize == 0 ? stockFontSize : fontSize -2);
         text.setTextSize(fontSize);
-        text = (TextView) mTextSwitcher.getChildAt(1);
+        text = (TextView)mTextSwitcher.getChildAt(1);
         text.setTextSize(fontSize);
     }
 
@@ -241,24 +228,19 @@ public abstract class Ticker {
         }
 
         mSegments.add(newSegment);
-        if (mEvent != null) {
-            if (newSegment != null) {
-                mEvent.updateTicker(newSegment.notification, text.toString());
-            }
-        }
-        
+
         if (initialCount == 0 && mSegments.size() > 0) {
             Segment seg = mSegments.get(0);
             seg.first = false;
-
+            
             mIconSwitcher.setAnimateFirstView(false);
             mIconSwitcher.reset();
             mIconSwitcher.setImageDrawable(seg.icon);
-
+            
             mTextSwitcher.setAnimateFirstView(false);
             mTextSwitcher.reset();
             mTextSwitcher.setText(seg.getText());
-
+            
             tickerStarting();
             scheduleAdvance();
         }
@@ -316,7 +298,7 @@ public abstract class Ticker {
 
     private void scheduleAdvance() {
         mHandler.postDelayed(mAdvanceTicker, TICKER_SEGMENT_DELAY);
-    }    
+    }
 
     public abstract void tickerStarting();
     public abstract void tickerDone();

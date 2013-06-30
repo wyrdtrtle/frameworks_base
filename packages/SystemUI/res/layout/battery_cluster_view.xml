@@ -38,7 +38,6 @@
 			android:shadowDx="0"
 			android:shadowDy="0"
 			android:shadowRadius="2.5"
-                        android:gravity="center"
 			android:visibility="gone" />
 	     <TextView
 			android:id="@+id/battery_text_center"
@@ -49,7 +48,6 @@
 			android:shadowDx="0"
 			android:shadowDy="0"
 			android:shadowRadius="2.5"
-                        android:gravity="center"
 			android:visibility="gone" />
 
 		<TextView
